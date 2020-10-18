@@ -127,7 +127,18 @@ class PixelEditor {
         });
         this.controls = controls.map(
             Control => new Control(state, config));
-        this.dom = elt("div", {}, this.canvas.dom, elt("br"), 
+        this.dom = elt("div", {
+            tabIndex: 0,
+            onkeydown: (event) => {
+                console.log(event.key);
+                let shortcut = Object.keys(tools).find(name => event.key.toLowerCase() == name[0].toLowerCase())
+                if (shortcut) {
+                    dispatch({tool: shortcut});
+                } else if (event.ctrlKey && event.key.toLowerCase() == "z") {
+                    dispatch({undo: true});
+                }
+            }
+        }, this.canvas.dom, elt("br"), 
                         ...this.controls.reduce((a, c) => a.concat(" ", c.dom), []));
     }
     syncState(state) {
