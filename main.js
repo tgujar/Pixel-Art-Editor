@@ -10,12 +10,12 @@ class Picture {
 
     // empties the picture and fills it with the given color
     static empty(width, height, color) {
-        let pixels = Array.from(width * height).fill(color);
+        let pixels = new Array(width * height).fill(color);
         return new Picture (width, height, pixels)
     }
 
     // returns the color of the pixel
-    pixels(x, y) {
+    pixel(x, y) {
         return this.pixels[y * this.width + x];
     }
 
@@ -24,7 +24,7 @@ class Picture {
         let copy = this.pixels.slice()
         // pixels must contain x, y and color props
         for (let {x, y, color} of pixels) {
-            copy[y * width + x] = color;
+            copy[y * this.width + x] = color;
         }
         return new Picture(this.width, this.height, copy);
     }   
@@ -35,7 +35,7 @@ function elt(type, props, ...children) {
     let elem = document.createElement(type);
     if (props) Object.assign(elem, props);
     for (let child of children) {
-        if (typeof child !== "string") elem.appendChild(child);
+        if (typeof child != "string") elem.appendChild(child);
         else elem.appendChild(document.createTextNode(child));
     }
     return elem;
@@ -57,10 +57,10 @@ class PictureCanvas {
         let onMove = onDown(pos);
         if (!onMove) return;
         let move = moveEvent => {
-            if (mouseEvent.buttons === 0) {
+            if (moveEvent.buttons === 0) {
                 this.dom.removeEventListener("mousemove", move);
             } else {
-                let newPos = pointerPosition(mouseEvent, this.dom);
+                let newPos = pointerPosition(moveEvent, this.dom);
                 if (pos.x == newPos.x && pos.y == newPos.y) return;
                 pos = newPos;
                 onMove(pos);
@@ -107,8 +107,8 @@ function drawPicture(picture, canvas, scale) {
     canvas.width = picture.width * scale;
     canvas.height = picture.height * scale;
     let cx = canvas.getContext("2d");
-    for (let x = 0; x < picture.height; x++) {
-        for (let y = 0; y < picture.width; y++) {
+    for (let y = 0; y < picture.height; y++) {
+        for (let x = 0; x < picture.width; x++) {
             cx.fillStyle = picture.pixel(x, y);
             cx.fillRect(x * scale, y * scale, scale, scale);
         }
@@ -156,7 +156,7 @@ class ColorSelect {
             value: state.color,
             onchange: () => dispatch({color: this.input.value})
         });
-        this.dom("label", null, "Color: ", this.input);
+        this.dom = elt("label", null, "Color: ", this.input);
     }
     syncState(state) { this.input.value = state.color; }
 }
@@ -315,3 +315,33 @@ class UndoButton {
         this.dom.disabled = state.done.length == 0;
     }
 }
+
+const startState = {
+    tool: "draw",
+    color: "#000000",
+    picture: Picture.empty(60, 30, "#f0f0f0"),
+    done: [],
+    doneAt: 0
+}
+
+const baseTools = {draw, fill, rectangle, pick};
+
+const baseControls = [
+    ToolSelect, ColorSelect, SaveButton, LoadButton, UndoButton
+];
+
+function startPixelEditor({state = startState,
+                            tools = baseTools,
+                            controls = baseControls}) {
+    let app = new PixelEditor(state, {
+        tools,
+        controls,
+        dispatch(action) {
+            state = historyUpdateState(state, action);
+            app.syncState(state);
+        }
+    });
+    return app.dom;
+}
+
+document.querySelector("div").appendChild(startPixelEditor({}));
