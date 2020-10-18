@@ -90,8 +90,8 @@ class PictureCanvas {
 
     syncState(picture) {
         if (picture == this.picture) return;
+        drawPicture(picture, this.dom, scale, this.picture);
         this.picture = picture;
-        drawPicture(this.picture, this.dom, scale)
     }
 }
 
@@ -103,12 +103,15 @@ function pointerPosition(pos, domNode) {
     }
 }
 
-function drawPicture(picture, canvas, scale) {
-    canvas.width = picture.width * scale;
-    canvas.height = picture.height * scale;
+function drawPicture(picture, canvas, scale, previous) {
+    if (!previous) {
+        canvas.width = picture.width * scale;
+        canvas.height = picture.height * scale;
+    }
     let cx = canvas.getContext("2d");
     for (let y = 0; y < picture.height; y++) {
         for (let x = 0; x < picture.width; x++) {
+            if (previous && (picture.pixel(x, y) == previous.pixel(x, y))) continue;
             cx.fillStyle = picture.pixel(x, y);
             cx.fillRect(x * scale, y * scale, scale, scale);
         }
