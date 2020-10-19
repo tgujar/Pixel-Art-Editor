@@ -179,7 +179,8 @@ class ColorSelect {
 function draw(pos, state, dispatch) {
     let initial = pos;
     function drawPixel(pos, state) {
-        drawLine(initial, pos, state, dispatch);
+        let drawn = connect(initial, pos, state, dispatch);
+        dispatch({picture: state.picture.draw(drawn)});
         initial = pos;
         // let drawn = {x: pos.x, y: pos.y, color: state.color};
         // dispatch({picture: state.picture.draw([drawn])});
@@ -251,7 +252,7 @@ function circle(start, state, dispatch) {
     return drawCircle;
 }
 
-function drawLine(start, pos, state, dispatch) {
+function connect(start, pos, state) {
     let m = (pos.y - start.y) / (pos.x - start.x);
     let drawn = [{x: pos.x, y: pos.y, color: state.color},
                  {x: start.x, y: start.y, color: state.color}];
@@ -273,10 +274,14 @@ function drawLine(start, pos, state, dispatch) {
             drawn.push({x: xStart + offsetX, y: yStart + offsetY, color: state.color});
         })
     }
-    dispatch({picture: state.picture.draw(drawn)});
+    return drawn;
 }
 
 function line(start, state, dispatch) {
+    function drawLine(pos) {
+        let drawn = connect(start, pos, state);
+        dispatch({picture: state.picture.draw(drawn)});
+    }
     drawLine(start);
     return drawLine;
 }
