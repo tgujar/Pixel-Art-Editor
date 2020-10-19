@@ -177,9 +177,12 @@ class ColorSelect {
 }
 
 function draw(pos, state, dispatch) {
-    function drawPixel({x, y}, state) {
-        let drawn = {x, y, color: state.color};
-        dispatch({picture: state.picture.draw([drawn])});
+    let initial = pos;
+    function drawPixel(pos, state) {
+        drawLine(initial, pos, state, dispatch);
+        initial = pos;
+        // let drawn = {x: pos.x, y: pos.y, color: state.color};
+        // dispatch({picture: state.picture.draw([drawn])});
     }
     drawPixel(pos, state);
     return drawPixel;
@@ -248,32 +251,32 @@ function circle(start, state, dispatch) {
     return drawCircle;
 }
 
-function line(start, state, dispatch) {
-    function drawLine(pos) {
-        let m = (pos.y - start.y) / (pos.x - start.x);
-        let drawn = [{x: pos.x, y: pos.y, color: state.color},
-                     {x: start.x, y: start.y, color: state.color}];
-        
-        if (Math.abs(m) <= 1) {
-            let dx = (new Array(Math.abs(pos.x - start.x))).fill(undefined).map((_, idx) => idx + 0.5);
-            let [xStart, yStart] = pos.x > start.x ? [start.x, start.y] : [pos.x, pos.y];
-            dx.forEach(offsetX => {
-                let offsetY = Math.round(m * offsetX);
-                offsetX = Math.round(offsetX);
-                drawn.push({x: xStart + offsetX, y: yStart + offsetY, color: state.color});
-            })
-        } else {
-            let dy = (new Array(Math.abs(pos.y - start.y))).fill(undefined).map((_, idx) => idx + 0.5);
-            let [yStart, xStart] = pos.y > start.y ? [start.y, start.x] : [pos.y, pos.x];
-            dy.forEach(offsetY => {
-                let offsetX = Math.round((1/m) * offsetY);
-                offsetY = Math.round(offsetY);
-                drawn.push({x: xStart + offsetX, y: yStart + offsetY, color: state.color});
-            })
-        }
-        console.log(drawn);
-        dispatch({picture: state.picture.draw(drawn)});
+function drawLine(start, pos, state, dispatch) {
+    let m = (pos.y - start.y) / (pos.x - start.x);
+    let drawn = [{x: pos.x, y: pos.y, color: state.color},
+                 {x: start.x, y: start.y, color: state.color}];
+    
+    if (Math.abs(m) <= 1) {
+        let dx = (new Array(Math.abs(pos.x - start.x))).fill(undefined).map((_, idx) => idx + 0.5);
+        let [xStart, yStart] = pos.x > start.x ? [start.x, start.y] : [pos.x, pos.y];
+        dx.forEach(offsetX => {
+            let offsetY = Math.round(m * offsetX);
+            offsetX = Math.round(offsetX);
+            drawn.push({x: xStart + offsetX, y: yStart + offsetY, color: state.color});
+        })
+    } else {
+        let dy = (new Array(Math.abs(pos.y - start.y))).fill(undefined).map((_, idx) => idx + 0.5);
+        let [yStart, xStart] = pos.y > start.y ? [start.y, start.x] : [pos.y, pos.x];
+        dy.forEach(offsetY => {
+            let offsetX = Math.round((1/m) * offsetY);
+            offsetY = Math.round(offsetY);
+            drawn.push({x: xStart + offsetX, y: yStart + offsetY, color: state.color});
+        })
     }
+    dispatch({picture: state.picture.draw(drawn)});
+}
+
+function line(start, state, dispatch) {
     drawLine(start);
     return drawLine;
 }
