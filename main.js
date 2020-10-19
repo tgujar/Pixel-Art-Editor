@@ -24,7 +24,9 @@ class Picture {
         let copy = this.pixels.slice()
         // pixels must contain x, y and color props
         for (let {x, y, color} of pixels) {
-            copy[y * this.width + x] = color;
+            if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+                copy[y * this.width + x] = color;
+            }
         }
         return new Picture(this.width, this.height, copy);
     }   
@@ -226,6 +228,27 @@ function pick({x, y}, state, dispatch) {
     dispatch({color: state.picture.pixel(x, y)});
 }
 
+function circle(start, state, dispatch) {
+    function drawCircle(pos) {
+        let radius = Math.round(Math.sqrt((start.x - pos.x)**2 + (start.y - pos.y)**2));
+        let xStart = start.x - radius;
+        let yStart = start.y - radius;//Math.min(start.y, pos.y);
+        let xEnd = start.x + radius;
+        let yEnd = start.y + radius;
+        let drawn = [];
+        for (let y = yStart; y <= yEnd; y++) {
+            for (let x = xStart; x <= xEnd; x++) {
+                if ((y - start.y)**2 + (x - start.x)**2 <= radius**2) {
+                    drawn.push({x, y, color: state.color});
+                }
+            }
+        }
+        dispatch({picture: state.picture.draw(drawn)});
+    }
+    drawCircle(start);
+    return drawCircle;
+}
+
 class SaveButton {
     constructor(state) {
         this.picture = state.picture;
@@ -338,7 +361,7 @@ const startState = {
     doneAt: 0
 }
 
-const baseTools = {draw, fill, rectangle, pick};
+const baseTools = {draw, fill, rectangle, circle, pick};
 
 const baseControls = [
     ToolSelect, ColorSelect, SaveButton, LoadButton, UndoButton
